@@ -9,7 +9,6 @@ const userSchema = new Schema({
   email: {
     type: String,
     required: true,
-    unique: true,
   },
   schoolname: {
     type: String,
@@ -18,7 +17,6 @@ const userSchema = new Schema({
   phoneno: {
     type: String,
     required: true,
-    unique: true,
   },
   message: {
     type: String,

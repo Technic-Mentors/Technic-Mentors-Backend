@@ -25,7 +25,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 let hardcodedUser = {
-  email: "technicmentors@gmail.com",
+  email: "capobrain@gmail.com",
   password: "$2a$10$UQoTsfaaoUYdx0Kzl51.QOU9E5dZsU5dE4yCk53UCfbCHTwl3OAGu",
 };
 // Route 1: create user using: api/auth/createuser
@@ -33,7 +33,6 @@ router.post(
   "/createuser",
   [
     body("name", "Enter a valid name").isLength({ min: 3 }),
-    body("email", "Enter a valid email").isEmail(),
     body("schoolname", "Enter a valid School name").isLength({ min: 3 }),
     body("phoneno", "Phone no must be at least 11 char long").isLength({
       min: 11,
@@ -64,6 +63,72 @@ router.post(
   }
 );
 
+router.get("/getallusers", async (req, res) => {
+  try {
+    const allusers = await User.find({});
+    res.json(allusers);
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send("internal server Error");
+  }
+});
+
+router.get("/getusers/:id", async(req,res)=>{
+  try {
+    const getUserId = await User.findById(req.params.id)
+    res.json(getUserId)
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send("internal server Error");
+  }
+})
+
+router.delete("/deluser/:id", async(req,res)=>{
+  try {
+    const getUserId = await User.findByIdAndDelete(req.params.id)
+    if (!getUserId) {
+      return res.status(404).json({message:"user not found"})
+    }
+    res.status(200).json({message:"successfully deleted"})
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send("internal server Error");
+  }
+})
+
+router.get("/edituser/:id", async(req,res)=>{
+  try {
+    const { name, email, schoolname, phoneno, message } = req.body;
+
+    const newUser = {}
+if(name){
+  newUser.name = name
+}
+if(email){
+  newUser.email = email
+}
+if(schoolname){
+  newUser.schoolname = schoolname
+}
+if(phoneno){
+  newUser.phoneno = phoneno
+}
+if(message){
+  newUser.message = message
+}
+
+let getUserId = await User.findById(req.params.id)
+    if (!getUserId) {
+      return res.status(404).json({message:"user not found"})
+    }
+
+    getUserId = await User.findByIdAndUpdate(req.params.id, {$set: newUser}, {new: true})
+    res.json(getUserId)
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send("internal server Error");
+  }
+})
 // post api start
 router.post(
   "/createpost",
@@ -132,20 +197,15 @@ router.get("/getpost/:slug", async (req, res) => {
 });
 // get post id end
 
-//
-router.get("/getallusers", async (req, res) => {
-  try {
-    const allusers = await User.find({});
-    res.json(allusers);
-  } catch (error) {
-    console.error(error.message);
-    res.status(500).send("internal server Error");
-  }
-});
-
 // Route 1: create user using: api/auth/createadmin
 router.post("/createadmin", async (req, res) => {
   try {
+    const {email} = req.body
+    if(email !== hardcodedUser.email){
+      return res
+        .status(400)
+        .json({ success: false, error: "invalid credentials" });
+    }
     // Check if the user already exists
     const existingUser = await Admin.findOne({ email: hardcodedUser.email });
 
