@@ -25,7 +25,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 let hardcodedUser = {
-  email: "capobrain@gmail.com",
+  email: "technicmentors@gmail.com",
   password: "$2a$10$UQoTsfaaoUYdx0Kzl51.QOU9E5dZsU5dE4yCk53UCfbCHTwl3OAGu",
 };
 // Route 1: create user using: api/auth/createuser
@@ -144,13 +144,14 @@ router.post(
       return res.status(400).json({ errors: errors.array() });
     }
     try {
-      const { title, content, category, slug } = req.body;
+      const { title, content, category, slug, meta } = req.body;
 
       const post = await Post.create({
         title,
         content,
         category,
         slug,
+        meta
       });
 
       res.json({ post });
