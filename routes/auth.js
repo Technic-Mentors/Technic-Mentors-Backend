@@ -51,6 +51,7 @@ router.post(
       if (checkEmail) {
         return res.json({ message: "user already exists", user: checkEmail })
       }
+      
       let hashPassword;
       if (password) {
         hashPassword = await bcrypt.hash(password, 10)
