@@ -7,7 +7,7 @@ const Support = require("../Schema/Support");
 const Category = require("../Schema/Category");
 const multer = require("multer");
 const bcrypt = require("bcrypt");
-
+const cron = require('node-cron');
 // const app = express();
 const router = express.Router();
 const { body, validationResult } = require("express-validator");
@@ -51,7 +51,7 @@ router.post(
       if (checkEmail) {
         return res.json({ message: "user already exists", user: checkEmail })
       }
-      
+
       let hashPassword;
       if (password) {
         hashPassword = await bcrypt.hash(password, 10)
@@ -440,4 +440,27 @@ router.get("/messages", async (req, res) => {
     return res.status(500).send("internal server error")
   }
 })
+
+const updateTicketStatus = async () => {
+  try {
+
+    const now = new Date()
+    console.log(now)
+    const fiveHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+
+    const tickets = await Support.find({ status: "Open" })
+    for (const ticket of tickets) {
+      const lastMessage = await Message.findOne({ ticketId: ticket._id }).sort({ createAt: -1 })
+      if (lastMessage && lastMessage.createAt < fiveHoursAgo) {
+        await Support.updateOne({ _id: ticket._id }, { status: "Close" })
+      }
+    }
+  } catch (error) {
+    console.log("Error updating ticket status:", error)
+  }
+}
+
+// Schedule the function to run every hour
+cron.schedule("0 0 * * *", updateTicketStatus);
+
 module.exports = router;
